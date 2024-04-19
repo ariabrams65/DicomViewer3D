@@ -40,17 +40,18 @@ app.post('/dicom', upload.single('dicom'), (req, res) => {
     const pythonEnv = process.platform === 'win32' ? pythonEnvWin : pythonEnvUnix;
     const pathToScript = process.platform === 'win32' ? pathToScriptWin : pathToScriptUnix;
 
-    const outputPath = path.join(__dirname, 'stl', 'output.stl');
-    if (!fs.existsSync(outputPath)) {
-        fs.mkdirSync(outputPath, {recursive: true});
+    const outputDir = path.join(__dirname, 'stl');
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, {recursive: true});
     }
+    const outputFile = path.join(outputDir, 'output.stl');
 
-    const args = `-t bone --reduce 0 -o ${outputPath} ${req.file.path}`;
+    const args = `-t bone --reduce 0 -o ${outputFile} ${req.file.path}`;
     const result = child_process.execSync(`${pythonEnv} ${pathToScript} ${args}`);
     console.log(result.toString());
 
     //Just downloading the file for now but will eventually display 3d render in browser
-    res.download(outputPath);
+    res.download(outputFile);
 });
 
 app.listen(3000);
