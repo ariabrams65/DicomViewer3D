@@ -31,7 +31,7 @@ app.use((req, res, next) => {
 app.post('/dicom', upload.single('dicom'), (req, res) => {
     //Location of dicom2stl in virtual environment
     const pathToScriptUnix = path.join(__dirname, '.venv', 'bin', 'dicom2stl');
-    const pathToScriptWin = path.join(__dirname, '.venv', 'Scripts', 'dicom2stl');
+    const pathToScriptWin = path.join(__dirname, '.venv', 'Scripts', 'dicom2stl.exe');
     
     //Location of python in virtual environment
     const pythonEnvUnix = path.join(__dirname, '.venv', 'bin', 'python');
