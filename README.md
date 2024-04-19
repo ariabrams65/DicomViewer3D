@@ -13,6 +13,7 @@ git clone https://github.com/ariabrams65/DicomViewer3D
 ```
 **Change into the directory and create a python virtual environment:**
 ```
+cd DicomViewer3D/
 python -m venv .venv
 ```
 **Activate the virtual environment:**
@@ -31,6 +32,11 @@ source .venv/bin/activate
 ```
 pip install -r requirements.txt
 ```
+**Install the Node.js dependencies:**
+```
+npm install
+```
+
 ## How to run locally
 
 **Run the server:**
