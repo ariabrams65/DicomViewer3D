@@ -3,3 +3,4 @@ package-lock.json
 stl
 uploads
 .venv
+/texture
