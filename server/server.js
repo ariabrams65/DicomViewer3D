@@ -40,7 +40,7 @@ app.post('/api/upload', upload.single('dicom'), (req, res) => {
     const pythonEnv = process.platform === 'win32' ? pythonEnvWin : pythonEnvUnix;
     const pathToScript = process.platform === 'win32' ? pathToScriptWin : pathToScriptUnix;
 
-    const outputDir = path.join(__dirname, 'stl');
+    const outputDir = path.join(__dirname, '../client/texture');
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, {recursive: true});
     }
@@ -51,7 +51,8 @@ app.post('/api/upload', upload.single('dicom'), (req, res) => {
     console.log(result.toString());
 
     //Just downloading the file for now but will eventually display 3d render in browser
-    res.download(outputFile);
+    // res.download(outputFile);
+    res.sendStatus(200);
 });
 
 app.listen(3000);
