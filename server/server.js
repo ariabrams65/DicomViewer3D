@@ -46,7 +46,7 @@ app.post('/api/upload', upload.single('dicom'), (req, res) => {
     }
     const outputFile = path.join(outputDir, 'output.stl');
 
-    const args = `-t bone --reduce 0 -o ${outputFile} ${req.file.path}`;
+    const args = `-t soft_tissue --reduce 0 -o ${outputFile} ${req.file.path}`;
     const result = child_process.execSync(`${pythonEnv} ${pathToScript} ${args}`);
     console.log(result.toString());
 

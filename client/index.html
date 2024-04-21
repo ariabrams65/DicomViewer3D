@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<title>My first three.js app</title>
+    <head>
+        <meta charset="utf-8">
+        <title>My first three.js app</title>
         <link rel="stylesheet" type="text/css" href="index.css" />
-	</head>
-	<body>
-    <form id="upload" action="/api/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="dicom" />
-      <button>Upload</button>
-    </form>
-		<script type="module" src="/main.js"></script>
-	</body>
+    </head>
+    <body>
+        <form id="upload" action="/api/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="dicom" />
+            <button>Upload</button>
+        </form>
+        <canvas id="canvas"></canvas>
+        <script type="module" src="/main.js"></script>
+    </body>
 </html>

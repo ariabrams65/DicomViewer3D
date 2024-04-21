@@ -2,37 +2,47 @@ import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
+const loader = new STLLoader();
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({
+    canvas: document.querySelector('#canvas')
+});
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+camera.position.set(1, 7, 11);
+camera.lookAt(0, 2, 0);
 
 // Lighting
-const ambientLight = new THREE.AmbientLight(0x404040); // soft white light
-scene.add(ambientLight);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-directionalLight.position.set(0, 1, 0);
-scene.add(directionalLight);
+const directionalLight = new THREE.DirectionalLight(0xffffff);
+directionalLight.position.set(500, 500, 500);
+directionalLight.castShadow = true;
+scene.add(directionalLight)
 
+const controls = new OrbitControls(camera, renderer.domElement);
 
-// STL Loader
-const loader = new STLLoader();
+let mesh = null;
+
 function loadCallback(geometry) {
-    const material = new THREE.MeshPhongMaterial({ color: 0x555555, specular: 0x111111, shininess: 200 });
-    const mesh = new THREE.Mesh(geometry, material);
+    if (mesh) {
+        scene.remove(mesh);
+
+        //not sure if this is needed
+        mesh.geometry.dispose();
+        mesh.material.dispose();
+    }
+    const material = new THREE.MeshStandardMaterial({ color: 0xffffff});
+    mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
-    camera.position.z = 300;
     camera.lookAt(mesh.position);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.addEventListener('change', render); // this line is optional if you are animating the scene continuously
+
     animate();
 }
 
-//loader.load('/texture/output.stl', loadCallback);
-
 function animate() {
     requestAnimationFrame(animate);
+    controls.update()
     render();
 }
 
