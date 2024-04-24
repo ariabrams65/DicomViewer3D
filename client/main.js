@@ -5,7 +5,9 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 const loader = new STLLoader();
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const nearClippingDistance = 0.01; // Adjust as needed
+const farClippingDistance = 1000; // Adjust as needed
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, nearClippingDistance, farClippingDistance);
 const renderer = new THREE.WebGLRenderer({
     canvas: document.querySelector('#canvas')
 });
@@ -44,16 +46,21 @@ function loadCallback(geometry) {
     scene.add(mesh);
 
     // Set camera to an initial position
-    camera.position.set(0, 0, 100); // Example initial position (adjust as needed)
+    camera.position.set(0, 0, 50); // Example initial position (adjust as needed)
 
     animate();
 }
 
 function animate() {
-    requestAnimationFrame(animate);
-    updateCameraPosition();
-    scaleModel();
-    renderer.render(scene, camera);
+    try {
+        requestAnimationFrame(animate);
+        updateCameraPosition();
+        scaleModel();
+        renderer.render(scene, camera);
+    } catch (error) {
+        console.error("An error occurred:", error);
+        
+    }
 }
 
 // Key bindings for first-person controls
@@ -65,10 +72,18 @@ document.addEventListener('keyup', (event) => {
     keyState[event.code] = false;
 });
 
-const minMoveSpeed = 0.1; // Minimum movement speed
+const minMoveSpeed = 0.04; // Minimum movement speed
 const maxMoveSpeed = 0.05; // Maximum movement speed
+const minDistanceToModel = 0.001;
 
 function updateCameraPosition() {
+
+    const distanceToModel = camera.position.distanceTo(mesh.position);
+    if (distanceToModel < minDistanceToModel) {
+        const moveDirection = new THREE.Vector3();
+        camera.getWorldDirection(moveDirection);
+        camera.position.add(moveDirection.multiplyScalar(minDistanceToModel - distanceToModel));
+    }
     // Create a direction vector from the camera's rotation
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
@@ -80,43 +95,76 @@ function updateCameraPosition() {
     const right = new THREE.Vector3();
     right.crossVectors(direction, camera.up).normalize();
 
-    // Calculate the distance between the camera and the model
-    const distance = camera.position.distanceTo(mesh.position);
-
     // Calculate the movement speed based on the distance
-    const moveSpeed = THREE.MathUtils.clamp(1 / distance, minMoveSpeed, maxMoveSpeed);
+    const moveSpeed = THREE.MathUtils.clamp(1 / camera.position.distanceTo(mesh.position), minMoveSpeed, maxMoveSpeed);
 
     // Move camera based on key input along global axes
+    let moveDirection = new THREE.Vector3(0, 0, 0);
+
     if (keyState['KeyW']) {
-        camera.position.add(direction.multiplyScalar(moveSpeed));
+        moveDirection.add(direction);
     }
     if (keyState['KeyS']) {
-        camera.position.add(direction.multiplyScalar(-moveSpeed));
+        moveDirection.sub(direction);
     }
     if (keyState['KeyA']) {
-        camera.position.add(right.multiplyScalar(-moveSpeed));
+        moveDirection.sub(right);
     }
     if (keyState['KeyD']) {
-        camera.position.add(right.multiplyScalar(moveSpeed));
+        moveDirection.add(right);
     }
+
+    // Apply movement direction
+    camera.position.add(moveDirection.multiplyScalar(moveSpeed));
+
+    // Move camera up and down
+    if (keyState['Space']) { 
+        camera.position.y += moveSpeed;
+    }
+    if (keyState['ShiftLeft'] || keyState['ShiftRight']) { 
+        camera.position.y -= moveSpeed;
+    }
+
 }
 
 document.addEventListener('click', () => {
     controls.lock();
 });
 
+let isFormSubmitted = false; 
+
 const form = document.getElementById('upload');
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    console.log('here');
+
+    // Check if form is already submitted
+    if (isFormSubmitted) {
+        console.log('Form is already submitted.');
+        return; 
+    }
+
+    console.log('Submitting form...');
+    isFormSubmitted = true; 
     const body = new FormData(form);
 
-    const response = await fetch(
-        '/api/upload',
-        { method: "POST", body }
-    );
-    loader.load('/texture/output.stl', loadCallback);
+    try {
+        const response = await fetch('/api/upload', { method: "POST", body });
+        if (response.ok) {
+            console.log('Upload successful.');
+            loader.load('/texture/output.stl', loadCallback);
+        } else {
+            console.error('Upload failed:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error occurred during upload:', error);
+    } finally {
+        isFormSubmitted = true;
+    }
 });
+
+
+
+
 
 // Function to scale the model based on camera distance
 function scaleModel() {
@@ -126,7 +174,7 @@ function scaleModel() {
     const distance = camera.position.distanceTo(mesh.position);
 
     // Calculate the scaling factor based on the inverse of the distance
-    const scaleFactor = 1 / distance; // Adjust the scaling factor as needed
+    const scaleFactor = 3 / distance; // Adjust the scaling factor as needed
 
     // Set a minimum scale to prevent the model from disappearing
     const minScale = 0.1;
