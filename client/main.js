@@ -148,7 +148,7 @@ form.addEventListener('submit', async (event) => {
     const body = new FormData(form);
 
     try {
-        const response = await fetch('/api/upload', { method: "POST", body });
+        const response = await fetch('/api/dicom', { method: "POST", body });
         if (response.ok) {
             console.log('Upload successful.');
             loader.load('/texture/output.stl', loadCallback);
