@@ -1,0 +1,43 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-container {
+  display: grid;
+  justify-items: center;
+  grid-template-columns: [first] 5% [line2] 15% [line3] 60% [col4-start] 15% [five] 5% [end];
+  grid-template-rows: [row1-start] 10% [row1-end] 75% [third-line] 15% [last-line];
+  height: 100vh;
+  width: 100vw;
+  grid-gap: 20px;
+}
+
+/* .Sidebar {
+  grid-column-start: first;
+  grid-column-end: line3;
+  grid-row-start: row1-start;
+  grid-row-end: last-line;
+  padding: 10px;
+} */
+
+.renderer {
+  grid-column-start: line2;
+  grid-column-end: col4-start;
+  grid-row-start: row1-end;
+  grid-row-end: third-line;
+  padding: 10px;
+}
+
+.toolbar {
+  grid-column-start: line2;
+  grid-column-end: col4-start;
+  grid-row-start: row1-start;
+  grid-row-end: row1-end;
+  display: flex; /* Arrange buttons horizontally */
+  align-items: center; /* Vertically align buttons */
+  padding: 10px;  
+  background-color: #f0f0f0;
+}
