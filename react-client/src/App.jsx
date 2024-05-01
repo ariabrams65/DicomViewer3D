@@ -12,13 +12,9 @@ function App() {
 
   return (
     <>
-      <Sidebar collapsed={collapsed}>
-        <Menu>
-          <MenuItem icon={<Home />}>Home</MenuItem>
-        </Menu>
-      </Sidebar>
+   
       <div className="app-container">
-        <Toolbar collapsed={collapsed} toggleSidebar={setCollapsed} /> {/* Update */}
+        <Toolbar /> {/* Update */}
         <Renderer className='renderer'>3d Renderer </Renderer>
       </div>
     </>

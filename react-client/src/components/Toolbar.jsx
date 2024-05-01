@@ -1,19 +1,17 @@
 import React from 'react'; // Don't need to import useState here anymore
-import IconButton from '@mui/material/IconButton';
-import DensityMediumIcon from '@mui/icons-material/DensityMedium';
+import TemporaryDrawer from './Sidebar';
 
-function Toolbar({ collapsed, toggleSidebar }) { // Receive props
+function Toolbar() { // Receive props
 
     return (
         <>
-            <IconButton onClick={() => { toggleSidebar(!collapsed) }} >
-                <DensityMediumIcon />
-            </IconButton>
+            <TemporaryDrawer />
             {/* <button onClick={() => toggleSidebar(!collapsed)}>Toggle Sidebar</button> */}
             {/* Use the toggleSidebar function */}
-            <button>Button 2</button>
-            <button>Button 3</button>
-            <button>Button 4</button>
+            <button className='left'>Button 2</button>
+            <h1 className='toolbar'>VIEW TYPE</h1>
+            <button className='right'>Button 4</button>
+            
         </>
     );
 }

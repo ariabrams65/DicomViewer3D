@@ -8,36 +8,57 @@
 .app-container {
   display: grid;
   justify-items: center;
-  grid-template-columns: [first] 5% [line2] 15% [line3] 60% [col4-start] 15% [five] 5% [end];
-  grid-template-rows: [row1-start] 10% [row1-end] 75% [third-line] 15% [last-line];
+  grid-template-columns: [col1] 5% [col2] 15% [col3] 15% [col4] 15% [col5] 15% [col6] 15% [col7] 15% [col8] 5% [end];
+  grid-template-rows: [row1] 10% [row2] 75% [row3] 15% [row4];
   height: 100vh;
   width: 100vw;
   grid-gap: 20px;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 /* .Sidebar {
   grid-column-start: first;
-  grid-column-end: line3;
-  grid-row-start: row1-start;
-  grid-row-end: last-line;
+  grid-column-end: col3;
+  grid-row-start: row1;
+  grid-row-end: row4;
   padding: 10px;
 } */
 
 .renderer {
-  grid-column-start: line2;
-  grid-column-end: col4-start;
-  grid-row-start: row1-end;
-  grid-row-end: third-line;
+  grid-column-start: col2;
+  grid-column-end: col8;
+  grid-row-start: row2;
+  grid-row-end: row3;
   padding: 10px;
 }
 
 .toolbar {
-  grid-column-start: line2;
-  grid-column-end: col4-start;
-  grid-row-start: row1-start;
-  grid-row-end: row1-end;
+  grid-column-start: col3;
+  grid-column-end: col7;
+  grid-row-start: row1;
+  grid-row-end: row2;
   display: flex; /* Arrange buttons horizontally */
   align-items: center; /* Vertically align buttons */
   padding: 10px;  
-  background-color: #f0f0f0;
+}
+
+.left{
+  grid-column-start: col2;
+  grid-column-end: col3;
+  grid-row-start: row1;
+  grid-row-end: row2;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.right{
+  grid-column-start: col7;
+  grid-column-end: col8;
+  grid-row-start: row1;
+  grid-row-end: row2;
+  display: flex;
+  align-items: center;
+  padding: 10px;
 }
