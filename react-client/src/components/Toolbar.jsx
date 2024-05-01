@@ -5,7 +5,9 @@ function Toolbar() { // Receive props
 
     return (
         <>
-            <TemporaryDrawer />
+            <div className='side'>
+            <TemporaryDrawer/>
+            </div>
             {/* <button onClick={() => toggleSidebar(!collapsed)}>Toggle Sidebar</button> */}
             {/* Use the toggleSidebar function */}
             <button className='left'>Button 2</button>

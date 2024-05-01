@@ -62,3 +62,16 @@
   align-items: center;
   padding: 10px;
 }
+
+.side{
+  grid-column-start: col1;
+  grid-column-end: col2;
+  grid-row-start: row1;
+  grid-row-end: row2;
+  align-items: center;
+  padding-top: 30%;
+}
+
+.icon{
+  transform: scale(1.8);
+}
