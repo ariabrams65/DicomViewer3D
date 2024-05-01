@@ -10,6 +10,9 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
 import DensityMediumIcon from '@mui/icons-material/DensityMedium';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import Collapse from '@mui/material/Collapse';
 
 
 
@@ -20,26 +23,38 @@ export default function TemporaryDrawer() {
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
   };
+  const [subopen, setsubOpen] = React.useState(true);
 
+  const handleClick = () => {
+    setsubOpen(!subopen);
+  };
   
 
   const DrawerList = (
-    <Box sx={{ width: 600 }} role="presentation" onClick={toggleDrawer(false)}>
+    <Box sx={{ width: 600}} role="presentation" >
       <List>
-        {['View Types', 'Settings', 'Help'].map((text, index) => (
+        <ListItemButton onClick={handleClick} style={{minHeight: '150px', backgroundColor:'grey'}}>
+          <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary="View Types" />
+          {subopen ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+        <Collapse in={subopen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            <ListItemButton sx={{ pl: 4 }}>
+              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Type 1" />
+            </ListItemButton>
+          </List>
+        </Collapse>
+        {['Settings', 'Help'].map((text, index) => (
           <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemText primary={text} />
+            <ListItemButton style={{minHeight: '150px', backgroundColor:'grey'}}>
+              <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary={text} />
             </ListItemButton>
           </ListItem>
         ))}
-      </List>
-      <Divider />
-      <List>
         {['Exit Menu'].map((text, index) => (
           <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemText primary={text} />
+            <ListItemButton style={{minHeight: '150px', backgroundColor:'grey'}} onClick={toggleDrawer(false)}>
+              <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary={text} />
             </ListItemButton>
           </ListItem>
         ))}

@@ -75,3 +75,7 @@
 .icon{
   transform: scale(1.8);
 }
+
+.centered{
+  text-align: center;
+}

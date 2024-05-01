@@ -12,7 +12,7 @@ function Toolbar() { // Receive props
             {/* Use the toggleSidebar function */}
             <button className='left'>Button 2</button>
             <h1 className='toolbar'>VIEW TYPE</h1>
-            <button className='right'>Button 4</button>
+            <button className='right'>Upload Files</button>
             
         </>
     );
