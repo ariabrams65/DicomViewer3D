@@ -35,12 +35,18 @@ export default function TemporaryDrawer() {
       <List>
         <ListItemButton onClick={handleClick} style={{minHeight: '150px', backgroundColor:'grey'}}>
           <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary="View Types" />
-          {subopen ? <ExpandLess /> : <ExpandMore />}
+          {subopen ? <ExpandLess /> : <ExpandMore />} 
         </ListItemButton>
         <Collapse in={subopen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             <ListItemButton sx={{ pl: 4 }}>
               <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Type 1" />
+            </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }}>
+              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Type 2" />
+            </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }}>
+              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Type 3" />
             </ListItemButton>
           </List>
         </Collapse>
