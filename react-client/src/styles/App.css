@@ -1,0 +1,81 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-container {
+  display: grid;
+  justify-items: center;
+  grid-template-columns: [col1] 5% [col2] 15% [col3] 15% [col4] 15% [col5] 15% [col6] 15% [col7] 15% [col8] 5% [end];
+  grid-template-rows: [row1] 10% [row2] 75% [row3] 15% [row4];
+  height: 100vh;
+  width: 100vw;
+  grid-gap: 20px;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* .Sidebar {
+  grid-column-start: first;
+  grid-column-end: col3;
+  grid-row-start: row1;
+  grid-row-end: row4;
+  padding: 10px;
+} */
+
+.renderer {
+  grid-column-start: col2;
+  grid-column-end: col8;
+  grid-row-start: row2;
+  grid-row-end: row3;
+  padding: 10px;
+}
+
+.toolbar {
+  grid-column-start: col3;
+  grid-column-end: col7;
+  grid-row-start: row1;
+  grid-row-end: row2;
+  display: flex; /* Arrange buttons horizontally */
+  align-items: center; /* Vertically align buttons */
+  padding: 10px;  
+}
+
+.left{
+  grid-column-start: col2;
+  grid-column-end: col3;
+  grid-row-start: row1;
+  grid-row-end: row2;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.right{
+  grid-column-start: col7;
+  grid-column-end: col8;
+  grid-row-start: row1;
+  grid-row-end: row2;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.side{
+  grid-column-start: col1;
+  grid-column-end: col2;
+  grid-row-start: row1;
+  grid-row-end: row2;
+  align-items: center;
+  padding-top: 30%;
+}
+
+.icon{
+  transform: scale(1.8);
+}
+
+.centered{
+  text-align: center;
+}
