@@ -34,21 +34,39 @@ renderer.setClearColor(new THREE.Color(0xadd8e6)); // Light blue color
 const controls = new PointerLockControls(camera, document.body);
 
 let mesh = null;
+//let x = 0;
+//let y = 0;
+//let z = 0;
+camera.position.set(0, 0, 50); // Example initial position (adjust as needed)
+//const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff]; // arry of colors
 
-function loadCallback(geometry) {
-    if (mesh) {
+let colorIndex = 0; // Track the index of the current color
+function loadCallback(geometry, color, transparent, opacity) {
+    /*if (mesh) {
         scene.remove(mesh);
         mesh.geometry.dispose();
         mesh.material.dispose();
-    }
-    const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    mesh = new THREE.Mesh(geometry, material);
+    }*/
+
+    // Create transparent material
+    const transparentMaterial = new THREE.MeshStandardMaterial({
+        
+        color: color,
+        transparent: transparent,
+        opacity: opacity
+    });
+
+    // Create mesh with loaded geometry and transparent material
+    mesh = new THREE.Mesh(geometry, transparentMaterial);
+    //mesh.position.set(x, y, z);
+    const scaleMultiplier = 10; // Adjust this value as needed
+    mesh.scale.multiplyScalar(scaleMultiplier);
     scene.add(mesh);
 
-    // Set camera to an initial position
-    camera.position.set(0, 0, 50); // Example initial position (adjust as needed)
-
     animate();
+    //z += 100;
+
+    colorIndex = (colorIndex + 1) % colors.length;
 }
 
 function animate() {
@@ -151,7 +169,11 @@ form.addEventListener('submit', async (event) => {
         const response = await fetch('/api/dicom', { method: "POST", body });
         if (response.ok) {
             console.log('Upload successful.');
-            loader.load('/texture/output.stl', loadCallback);
+            loader.load('/texture/output.stl', (geometry) => loadCallback(geometry, 0xff0000, false, 1));
+            loader.load('/texture/output2.stl', (geometry) => loadCallback(geometry, 0xffffff, true, 0.5));
+            loader.load('/texture/output3.stl', (geometry) => loadCallback(geometry, 0xffffff, false, 1));
+            loader.load('/texture/output4.stl', (geometry) => loadCallback(geometry, 0x0000ff, false, 1));
+            //loader.load('/texture/output5.stl', loadCallback);
         } else {
             console.error('Upload failed:', response.statusText);
         }
