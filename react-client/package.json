@@ -12,10 +12,13 @@
   "dependencies": {
     "@mui/icons-material": "^5.15.15",
     "@mui/material": "^5.15.15",
+    "@react-three/drei": "^9.105.6",
+    "leva": "^0.9.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-pro-sidebar": "^1.1.0",
-    "react-router-dom": "^6.23.0"
+    "react-router-dom": "^6.23.0",
+    "three": "^0.164.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

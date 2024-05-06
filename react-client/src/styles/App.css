@@ -17,20 +17,13 @@
   max-height: 100%;
 }
 
-/* .Sidebar {
-  grid-column-start: first;
-  grid-column-end: col3;
-  grid-row-start: row1;
-  grid-row-end: row4;
-  padding: 10px;
-} */
-
-.renderer {
+#renderer {
   grid-column-start: col2;
   grid-column-end: col8;
   grid-row-start: row2;
   grid-row-end: row3;
   padding: 10px;
+  min-width: 100%;
 }
 
 .toolbar {

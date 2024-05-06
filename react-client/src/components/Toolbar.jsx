@@ -10,7 +10,7 @@ function Toolbar() { // Receive props
             </div>
             {/* <button onClick={() => toggleSidebar(!collapsed)}>Toggle Sidebar</button> */}
             {/* Use the toggleSidebar function */}
-            <button className='left'>Button 2</button>
+            <button className='left'>Dicom Viewer</button>
             <h1 className='toolbar'>VIEW TYPE</h1>
             <button className='right'>Upload Files</button>
             

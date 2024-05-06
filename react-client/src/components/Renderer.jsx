@@ -1,18 +1,14 @@
-import React, { useEffect } from 'react';
+//Renderer.jsx
 
-function Renderer(props) {
-  useEffect(() => {
-    const rendererElement = document.querySelector('.renderer');
-    if (rendererElement) {
-      rendererElement.style.backgroundColor = 'white'; 
-    }
-  }, []);
+import { Canvas } from '@react-three/fiber'
 
+export default function Renderer() {
   return (
-    <div className="renderer" style={{ height: '100%', width: '100%' }}> 
-      {props.children} 
-    </div>
+    <Canvas>
+      <mesh>
+        <boxGeometry />
+        <meshStandardMaterial />
+      </mesh>
+    </Canvas>
   );
 }
-
-export default Renderer;
