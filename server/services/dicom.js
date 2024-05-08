@@ -1,8 +1,43 @@
 const child_process = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const config = require('../../config');
 
-async function generateSTL(filePath) {
+async function generateSTL(dicomFolder) {
+    //create the folder where the models will be stored
+    const modelId = uuidv4();
+    const folder = createOutputFolder(modelId);
+
+    //create an array for the 4 argument strings for each tissue type
+    all_args = [];
+    for (const type of ['soft_tissue', 'skin', 'bone', 'fat']) {
+        const outputFile = path.join(folder, `${type}.stl`);
+        const args = `-a -t ${type} --reduce 0 --smooth 25 -l -o ${outputFile} ${dicomFolder}`;
+        all_args.push(args);
+    }
+
+    //run the script 4 times to create the models
+    const command = getScriptCommand();
+    for (args of all_args) {
+        const result = child_process.execSync(`${command} ${args}`);
+        console.log(result.toString());
+    } 
+
+    return modelId;
+}
+
+function createOutputFolder(modelId) {
+    if (!fs.existsSync(config.modelFolder)) {
+        fs.mkdirSync(config.modelFolder, {recursive: true});
+    }
+    //Creating the folder where the 4 models will live
+    const folder = path.join(config.modelFolder, modelId);
+    fs.mkdirSync(folder, {recursive: true});
+    return folder;
+}
+
+function getScriptCommand() {
     //Location of dicom2stl in virtual environment
     const pathToScriptUnix = path.join(__dirname, '..', '.venv', 'bin', 'dicom2stl');
     const pathToScriptWin = path.join(__dirname, '..', '.venv', 'Scripts', 'dicom2stl.exe');
@@ -14,32 +49,7 @@ async function generateSTL(filePath) {
     const pythonEnv = process.platform === 'win32' ? pythonEnvWin : pythonEnvUnix;
     const pathToScript = process.platform === 'win32' ? pathToScriptWin : pathToScriptUnix;
 
-    const outputDir = path.join(__dirname, '../../client/texture');
-    if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, {recursive: true});
-    }
-    const outputFile = path.join(outputDir, 'output.stl');
-    const outputFile2 = path.join(outputDir, 'output2.stl');
-    //const metaFile = path.join(outputDir, 'metadata.txt')
-    const outputFile3 = path.join(outputDir, 'output3.stl');
-    const outputFile4 = path.join(outputDir, 'output4.stl');
-    const outputFile5 = path.join(outputDir, 'output5.stl');
-
-    const args = `-a -t soft_tissue --reduce 0 --smooth 25 -l -o ${outputFile} ${filePath}`;
-    const args2 = `-a -t skin --reduce 0 --smooth 25 -l -o ${outputFile2} ${filePath}`;
-    const args3 = `-a -t bone --reduce 0 --smooth 25 -l -o ${outputFile3} ${filePath}`;
-    const args4 = `-a -t fat --reduce 0 --smooth 25 -l -o ${outputFile4} ${filePath}`;
-    const args5 = `-a -t two --reduce 0 --smooth 25 -o ${outputFile5} ${filePath}`;
-    const result = child_process.execSync(`${pythonEnv} ${pathToScript} ${args}`);
-    const result2 = child_process.execSync(`${pythonEnv} ${pathToScript} ${args2}`);
-    const result3 = child_process.execSync(`${pythonEnv} ${pathToScript} ${args3}`);
-    const result4 = child_process.execSync(`${pythonEnv} ${pathToScript} ${args4}`);
-    const result5 = child_process.execSync(`${pythonEnv} ${pathToScript} ${args5}`);
-    console.log(result.toString());
-    console.log(result2.toString());
-    console.log(result3.toString());
-    console.log(result4.toString());
-    console.log(result5.toString());
+    return `${pythonEnv} ${pathToScript}`;
 }
 
 module.exports = { generateSTL };

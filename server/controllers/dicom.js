@@ -2,8 +2,8 @@ const dicomService = require('../services/dicom');
 
 async function uploadDicom(req, res, next) {
     try {
-        await dicomService.generateSTL(req.file.path);
-        res.sendStatus(201);
+        const modelId = await dicomService.generateSTL(req.file.path);
+        res.status(201).json({modelId: modelId});
     } catch (e) {
         console.log(e);
         next(e);
