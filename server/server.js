@@ -11,5 +11,6 @@ app.use((req, _res, next) => {
 });
 
 app.use('/api/dicom', require('./routes/dicom'));
+app.use('/api/model', require('./routes/model'));
 
 app.listen(3000);

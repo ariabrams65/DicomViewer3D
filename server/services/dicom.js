@@ -4,7 +4,7 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const config = require('../../config');
 
-async function generateSTL(dicomFolder) {
+async function generateModels(dicomFolder) {
     //create the folder where the models will be stored
     const modelId = uuidv4();
     const folder = createOutputFolder(modelId);
@@ -19,7 +19,7 @@ async function generateSTL(dicomFolder) {
 
     //run the script 4 times to create the models
     const command = getScriptCommand();
-    for (args of all_args) {
+    for (const args of all_args) {
         const result = child_process.execSync(`${command} ${args}`);
         console.log(result.toString());
     } 
@@ -52,4 +52,15 @@ function getScriptCommand() {
     return `${pythonEnv} ${pathToScript}`;
 }
 
-module.exports = { generateSTL };
+function isValid(dicomFolder) {
+    //returns false if there aren't enough .dcm files in folder
+    return true
+
+}
+
+function clean(dicomFolder) {
+    //removes non .dcm files from folder
+
+}
+
+module.exports = { generateModels, isValid, clean };
