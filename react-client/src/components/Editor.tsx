@@ -5,7 +5,7 @@ import {useLoader} from "@react-three/fiber";
 import {STLLoader} from "three/examples/jsm/loaders/STLLoader";
 import Loader from "./Loader";
 
-const files = ['bone', 'heart', 'LLL']
+const files = ['soft-tissue', 'skin', 'bone', 'fat']
 const color = ['#9c9ea1', '#781e14', '#d66154']
 const opacity = [1, 1, 1]
 
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const Editor: FC<Props> = ({setSelected}) => {
-    const stl = useLoader(STLLoader, ['bone.stl', 'heart.stl', 'LLL.stl'])
+    const stl = useLoader(STLLoader, ['output.stl', 'output2.stl', 'output3.stl', 'output4.stl'])
     const group = useRef<any>(null!)
 
     return (
