@@ -19,3 +19,5 @@ if __name__ == '__main__':
     exporter.SetRenderWindow(slicer.app.layoutManager().threeDWidget(0).threeDView().renderWindow())
     exporter.SetFileName(os.path.join(sys.argv[2], 'model.gltf'))
     exporter.Write()
+
+    sys.exit(0)
