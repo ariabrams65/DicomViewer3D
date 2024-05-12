@@ -6,16 +6,19 @@ async function uploadDicom(req, res, next) {
         if (!req.file) {
             return res.status(400).json('Missing file');
         }
-        if (!dicomService.isValid(req.file.path)) {
+        if (!dicomService.isZip(req.file.path)) {
+            return res.status(400).json('File is not a zip');
+        }
+        const folder = dicomService.unzip(req.file.path);
+        if (!dicomService.isValid(folder)) {
             return res.status(400).json('Dicom files are missing from folder');
         }
-        dicomService.clean(req.file.path);
 
-        const modelId = await dicomService.generateModels(req.file.path);
+        const modelId = await dicomService.generateModels(folder);
         res.status(201).json({modelId: modelId});
 
         //Deleting dicom files after generating models
-        fs.unlinkSync(req.file.path);
+        fs.rmSync(folder, { recursive: true, force: true });
     } catch (e) {
         console.log(e);
         next(e);

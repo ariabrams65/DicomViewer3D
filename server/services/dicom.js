@@ -2,6 +2,7 @@ const child_process = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const AdmZip = require('adm-zip');
 const config = require('../../config');
 
 async function generateModels(inputFolder) {
@@ -18,9 +19,6 @@ async function generateModels(inputFolder) {
 }
 
 function createOutputFolder(modelId) {
-    if (!fs.existsSync(config.modelFolder)) {
-        fs.mkdirSync(config.modelFolder, {recursive: true});
-    }
     //Creating the folder where the model will live
     const folder = path.join(config.modelFolder, modelId);
     fs.mkdirSync(folder, {recursive: true});
@@ -29,7 +27,7 @@ function createOutputFolder(modelId) {
 
 function getScriptCommand(inputFolder, outputFolder) {
     const scriptPath =  `${path.join(__dirname, '../slicer/script.py')}`;
-    const scriptArgs = `${path.join(config.dicomFolder, inputFolder)} ${path.join(config.modelFolder, outputFolder)}`;
+    const scriptArgs = `${inputFolder} ${outputFolder}`;
     return `"${process.env.SLICER_EXECUTABLE}" --python-script ${scriptPath} ${scriptArgs}`;
 }
 
@@ -39,9 +37,19 @@ function isValid(dicomFolder) {
 
 }
 
-function clean(dicomFolder) {
-    //removes non .dcm files from folder
-
+function isZip(file) {
+    //returns true if the given file is a zip archive
+    return true;
 }
 
-module.exports = { generateModels, isValid, clean };
+function unzip(zipFile) {
+    //unzips file into config.dicomFolder and returns the subfolder path
+    const zip = new AdmZip(zipFile);
+    const targetFolder = path.join(config.dicomFolder, uuidv4());
+    fs.mkdirSync(targetFolder, {recursive: true});
+
+    zip.extractAllTo(targetFolder, true);
+    return targetFolder;
+}
+
+module.exports = { generateModels, isValid, unzip, isZip };

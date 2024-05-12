@@ -3,6 +3,8 @@ import sys
 import os
 
 if __name__ == '__main__':
+    
+
     dicomDataDir = sys.argv[1] # input folder with DICOM files
     loadedNodeIDs = []  # this list will contain the list of all loaded node IDs
 
