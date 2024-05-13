@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
 const fs = require('fs');
+const config = require('../../config');
+const { v4: uuidv4 } = require('uuid');
 const { uploadDicom } = require('../controllers/dicom');
 
 const storage = multer.diskStorage({
-    destination: function (_req, _file, cb) {
-        const uploadPath = path.join(__dirname, 'uploads');
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath);
-        }
-        cb(null, uploadPath);
-    },
+    // destination: function (_req, _file, cb) {
+    //     if (!fs.existsSync(config.dicomFolder)) {
+    //         fs.mkdirSync(config.dicomFolder);
+    //     }
+    //     cb(null, config.dicomFolder);
+    // },
     filename: function (_req, file, cb) {
-        cb(null, file.originalname);
+        cb(null, uuidv4() + '-' + file.originalname);
     }
 });
 const upload = multer({storage: storage});

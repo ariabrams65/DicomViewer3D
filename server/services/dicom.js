@@ -1,45 +1,55 @@
 const child_process = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const AdmZip = require('adm-zip');
+const config = require('../../config');
 
-async function generateSTL(filePath) {
-    //Location of dicom2stl in virtual environment
-    const pathToScriptUnix = path.join(__dirname, '..', '.venv', 'bin', 'dicom2stl');
-    const pathToScriptWin = path.join(__dirname, '..', '.venv', 'Scripts', 'dicom2stl.exe');
-    
-    //Location of python in virtual environment
-    const pythonEnvUnix = path.join(__dirname, '..', '.venv', 'bin', 'python');
-    const pythonEnvWin = path.join(__dirname, '..', '.venv', 'Scripts', 'python.exe');
+async function generateModels(inputFolder) {
+    //create the folder where the models will be stored
+    const modelId = uuidv4();
+    const outputFolder = createOutputFolder(modelId);
 
-    const pythonEnv = process.platform === 'win32' ? pythonEnvWin : pythonEnvUnix;
-    const pathToScript = process.platform === 'win32' ? pathToScriptWin : pathToScriptUnix;
-
-    const outputDir = path.join(__dirname, '../../client/texture');
-    if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, {recursive: true});
-    }
-    const outputFile = path.join(outputDir, 'output.stl');
-    const outputFile2 = path.join(outputDir, 'output2.stl');
-    //const metaFile = path.join(outputDir, 'metadata.txt')
-    const outputFile3 = path.join(outputDir, 'output3.stl');
-    const outputFile4 = path.join(outputDir, 'output4.stl');
-    const outputFile5 = path.join(outputDir, 'output5.stl');
-
-    const args = `-a -t soft_tissue --reduce 0 --smooth 25 -l -o ${outputFile} ${filePath}`;
-    const args2 = `-a -t skin --reduce 0 --smooth 25 -l -o ${outputFile2} ${filePath}`;
-    const args3 = `-a -t bone --reduce 0 --smooth 25 -l -o ${outputFile3} ${filePath}`;
-    const args4 = `-a -t fat --reduce 0 --smooth 25 -l -o ${outputFile4} ${filePath}`;
-    const args5 = `-a -t two --reduce 0 --smooth 25 -o ${outputFile5} ${filePath}`;
-    const result = child_process.execSync(`${pythonEnv} ${pathToScript} ${args}`);
-    const result2 = child_process.execSync(`${pythonEnv} ${pathToScript} ${args2}`);
-    const result3 = child_process.execSync(`${pythonEnv} ${pathToScript} ${args3}`);
-    const result4 = child_process.execSync(`${pythonEnv} ${pathToScript} ${args4}`);
-    const result5 = child_process.execSync(`${pythonEnv} ${pathToScript} ${args5}`);
+    //run the script to create the model
+    const command = getScriptCommand(inputFolder, outputFolder);
+    const result = child_process.execSync(command);
     console.log(result.toString());
-    console.log(result2.toString());
-    console.log(result3.toString());
-    console.log(result4.toString());
-    console.log(result5.toString());
+
+    return modelId;
 }
 
-module.exports = { generateSTL };
+function createOutputFolder(modelId) {
+    //Creating the folder where the model will live
+    const folder = path.join(config.modelFolder, modelId);
+    fs.mkdirSync(folder, {recursive: true});
+    return folder;
+}
+
+function getScriptCommand(inputFolder, outputFolder) {
+    const scriptPath =  `${path.join(__dirname, '../slicer/script.py')}`;
+    const scriptArgs = `${inputFolder} ${outputFolder}`;
+    return `"${process.env.SLICER_EXECUTABLE}" --python-script ${scriptPath} ${scriptArgs}`;
+}
+
+function isValid(dicomFolder) {
+    //returns false if there aren't enough .dcm files in folder
+    return true
+
+}
+
+function isZip(file) {
+    //returns true if the given file is a zip archive
+    return true;
+}
+
+function unzip(zipFile) {
+    //unzips file into config.dicomFolder and returns the subfolder path
+    const zip = new AdmZip(zipFile);
+    const targetFolder = path.join(config.dicomFolder, uuidv4());
+    fs.mkdirSync(targetFolder, {recursive: true});
+
+    zip.extractAllTo(targetFolder, true);
+    return targetFolder;
+}
+
+module.exports = { generateModels, isValid, unzip, isZip };
