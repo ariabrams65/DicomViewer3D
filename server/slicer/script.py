@@ -20,4 +20,8 @@ if __name__ == '__main__':
     exporter.SetFileName(os.path.join(sys.argv[2], 'model.gltf'))
     exporter.Write()
 
-    sys.exit(0)
+    sys.exit(0)    
+
+
+
+
