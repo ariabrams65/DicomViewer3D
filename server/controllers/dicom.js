@@ -1,5 +1,5 @@
-const dicomService = require('../services/dicom');
-const fs = require('fs');
+const dicomService = require("../services/dicom");
+const fs = require("fs");
 
 async function uploadDicom(req, res, next) {
     try {
@@ -14,8 +14,10 @@ async function uploadDicom(req, res, next) {
             return res.status(400).json('Dicom files are missing from folder');
         }
 
+        dicomService.filterDicom(folder);
+
         const modelId = await dicomService.generateModels(folder);
-        res.status(201).json({modelId: modelId});
+        res.status(201).json({ modelId: modelId });
 
         //Deleting dicom files after generating models
         fs.rmSync(folder, { recursive: true, force: true });

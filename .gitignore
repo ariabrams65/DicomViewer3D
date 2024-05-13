@@ -5,3 +5,5 @@ uploads
 .venv
 texture/
 textures/
+.DS_Store
+.env
