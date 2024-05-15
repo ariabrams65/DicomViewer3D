@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
-const loader = new STLLoader();
+const loader = new GLTFLoader();
 
 const scene = new THREE.Scene();
 const nearClippingDistance = 0.01; // Adjust as needed
@@ -41,32 +42,16 @@ camera.position.set(0, 0, 50); // Example initial position (adjust as needed)
 //const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff]; // arry of colors
 
 let colorIndex = 0; // Track the index of the current color
-function loadCallback(geometry, color, transparent, opacity) {
-    /*if (mesh) {
+function loadCallback(gltf) {
+    if (mesh) {
         scene.remove(mesh);
-        mesh.geometry.dispose();
-        mesh.material.dispose();
-    }*/
+    }
 
-    // Create transparent material
-    const transparentMaterial = new THREE.MeshStandardMaterial({
-        
-        color: color,
-        transparent: transparent,
-        opacity: opacity
-    });
-
-    // Create mesh with loaded geometry and transparent material
-    mesh = new THREE.Mesh(geometry, transparentMaterial);
-    //mesh.position.set(x, y, z);
-    const scaleMultiplier = 10; // Adjust this value as needed
-    mesh.scale.multiplyScalar(scaleMultiplier);
+    mesh = gltf.scene;
+    mesh.position.set(0, 0, 0);
+    mesh.rotation.x = -Math.PI / 2;
     scene.add(mesh);
-
     animate();
-    //z += 100;
-
-    colorIndex = (colorIndex + 1) % colors.length;
 }
 
 function animate() {
@@ -168,12 +153,11 @@ form.addEventListener('submit', async (event) => {
     try {
         const response = await fetch('/api/dicom', { method: "POST", body });
         if (response.ok) {
+            const result = await response.json();
             console.log('Upload successful.');
-            loader.load('/texture/output.stl', (geometry) => loadCallback(geometry, 0xff0000, false, 1));
-            loader.load('/texture/output2.stl', (geometry) => loadCallback(geometry, 0xffffff, true, 0.5));
-            loader.load('/texture/output3.stl', (geometry) => loadCallback(geometry, 0xffffff, false, 1));
-            loader.load('/texture/output4.stl', (geometry) => loadCallback(geometry, 0x0000ff, false, 1));
-            //loader.load('/texture/output5.stl', loadCallback);
+            console.log('Response:', result);
+            const modelID = result.modelId;
+            loader.load(`/textures/${modelID}/model.gltf`, loadCallback);
         } else {
             console.error('Upload failed:', response.statusText);
         }
