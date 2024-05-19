@@ -1,9 +1,9 @@
 import React, { useState, useRef }from 'react'; // Don't need to import useState here anymore
 import TemporaryDrawer from './Sidebar';
+// import axios from "axios";
 
 
-
-function Toolbar() { // Receive props
+function Toolbar({ setIDName, setUploadSuccess }) { // Receive props
     const formRef = useRef(null);
     const [isFormSubmitted, setIsFormSubmitted] = useState(false);
 
@@ -20,15 +20,19 @@ function Toolbar() { // Receive props
         const formData = new FormData(formRef.current);
 
         try {
-            const response = await fetch('/api/upload', { // Note the updated URL
+            const response = await fetch('/api/dicom', { // Note the updated URL
                 method: 'POST',
                 body: formData
             });
-
             if (response.ok) {
                 const result = await response.json();
                 console.log('Upload successful:', result);
-                // ... (Handle the successful response, e.g., update UI)
+                console.log('Response:', result);
+                const modelID = result.modelId;
+                // loader.load(`/textures/${modelID}/model.gltf`, loadCallback);
+                // Somehow need to load the model into react three fiber
+                setIDName(modelID);
+                setUploadSuccess(true);
             } else {
                 console.error('Upload failed:', response.statusText);
             }
