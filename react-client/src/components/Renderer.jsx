@@ -1,4 +1,12 @@
 import React, { useEffect } from 'react';
+import { Canvas, useLoader } from '@react-three/fiber';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+
+function Scene() {
+  const gltf = useLoader(GLTFLoader, 'the gltf loader')
+  return <primitive object={gltf.scene} />
+}
 
 function Renderer(props) {
   useEffect(() => {
