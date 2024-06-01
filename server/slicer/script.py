@@ -4,8 +4,9 @@ import os
 import vtk
 import slicer
 import shutil
+import re
 
-def load_and_filter_rtstruct(db, seriesUID, unwantedKeywords):
+def load_and_filter_rtstruct(db, seriesUID, unwantedKeywords, outputFolder):
     loadedNodeIDs = DICOMUtils.loadSeriesByUID([seriesUID])
     for nodeID in loadedNodeIDs:
         node = slicer.mrmlScene.GetNodeByID(nodeID)
@@ -24,7 +25,7 @@ def load_and_filter_rtstruct(db, seriesUID, unwantedKeywords):
                 segment = segmentation.GetSegment(segmentID)
                 segmentName = segment.GetName()
                 print(f"Processing segment: {segmentName}")
-                if any(keyword.lower() in segmentName.lower() for keyword in unwantedKeywords):
+                if any(keyword.lower() in segmentName.lower() for keyword in unwantedKeywords if keyword.lower() != 'test') and not any(re.search(r'\btest\b', segmentName.lower()) for keyword in unwantedKeywords):
                     print(f"Removing segment: {segmentName}")
                     segmentation.RemoveSegment(segmentID)
                 elif "ptv" in segmentName.lower():  # Check if "ptv" is a substring of the segment name
@@ -42,14 +43,23 @@ def load_and_filter_rtstruct(db, seriesUID, unwantedKeywords):
 
                     displayNode.Modified()
                     segmentation.Modified()
+                    segment_names_path = os.path.join(outputFolder, 'segment_names.txt')
+                    with open(segment_names_path, 'a') as f:
+                        f.write(segmentName + '\n')
                     #print(f"3D Opacity for 'Body': {displayNode.GetSegmentOpacity3D(segmentID)}")
                     #print(f"2D Fill Opacity for 'Body': {displayNode.GetSegmentOpacity2DFill(segmentID)}")
                     #print(f"2D Outline Opacity for 'Body': {displayNode.GetSegmentOpacity2DOutline(segmentID)}")
                 
-                '''else:
+                else:
 
+                    segment_names_path = os.path.join(outputFolder, 'segment_names.txt')
+                    with open(segment_names_path, 'a') as f:
+                        f.write(segmentName + '\n')
+
+                    #if segmentation.GetSegment(segmentID).GetRepresentation() != slicer.vtkSegmentationConverter.GetSegmentationBinaryLabelmapRepresentationName():
+                        #segmentation.CreateRepresentation(slicer.vtkSegmentationConverter.GetSegmentationBinaryLabelmapRepresentationName(), segmentID)
                     # Apply Gaussian smoothing to the segment
-                    print(f"Applying Gaussian smoothing to segment: {segmentName}")
+                    '''print(f"Applying Gaussian smoothing to segment: {segmentName}")
                     segmentEditorWidget = slicer.qMRMLSegmentEditorWidget()
                     segmentEditorWidget.setMRMLScene(slicer.mrmlScene)
                     segmentEditorNode = slicer.vtkMRMLSegmentEditorNode()
@@ -80,46 +90,15 @@ def disable_orientation_marker_and_axis_labels():
     viewNode.Modified()
     slicer.app.processEvents()
 
-def convert_segmentation_to_model(segmentationNode):
-    # Get the subject hierarchy node
-    shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+def export_scene_to_obj(outputFolder):
+    threeDView = slicer.app.layoutManager().threeDWidget(0).threeDView()
+    renderWindow = threeDView.renderWindow()
 
-    # Get the root item ID
-    rootItemID = shNode.GetSceneItemID()
-
-    # Create a folder item under the root item
-    folderItemID = shNode.CreateFolderItem(rootItemID, "ExportedModels")
-
-    # Export visible segments directly to the folder item
-    slicer.modules.segmentations.logic().ExportVisibleSegmentsToModels(segmentationNode, folderItemID)
-
-    return folderItemID
-
-
-def export_model_to_gltf(outputFolder):
-    # Get the subject hierarchy node
-    shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-
-    # Ensure the OpenAnatomyExport module is loaded
-    if not slicer.util.getModule('OpenAnatomyExport'):
-        slicer.util.selectModule('OpenAnatomyExport')
-
-    # Access the module logic
-    moduleWidget = slicer.util.getModuleLogic('OpenAnatomyExport')
-    
-
-    # Find the "ExportedModels" folder node in the scene by name
-    exportedModelsNodeID = shNode.GetItemByName("ExportedModels")
-
-    # Check if the "ExportedModels" folder node is found
-    if exportedModelsNodeID:
-        print("Found 'ExportedModels' folder node")
-    else:
-        print("Unable to find 'ExportedModels' folder node")
-        return
-    
-
-    moduleWidget.exportModel(exportedModelsNodeID, outputFolder)
+    # Create OBJ exporter
+    exporter = vtk.vtkOBJExporter()
+    exporter.SetInput(renderWindow)
+    exporter.SetFilePrefix(os.path.join(outputFolder, 'scene'))
+    exporter.Write()
 
 def main(inputFolder, outputFolder):
     dicomDataDir = inputFolder
@@ -141,21 +120,11 @@ def main(inputFolder, outputFolder):
                         loadedNodeIDs.extend(DICOMUtils.loadSeriesByUID([serie]))
                     elif modality == 'RTSTRUCT':
                         unwantedKeywords = ['Avoid', 'Couch', 'PTV', 'ITV', 'GTV', 'test']
-                        loadedNodeIDs.extend(load_and_filter_rtstruct(db, serie, unwantedKeywords))
+                        loadedNodeIDs.extend(load_and_filter_rtstruct(db, serie, unwantedKeywords, outputFolder))
 
     disable_orientation_marker_and_axis_labels()
 
-    # Convert segmentation to model
-    segmentationNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLSegmentationNode")
-    if segmentationNode:
-        modelNodes = convert_segmentation_to_model(segmentationNode)
-        print(modelNodes)
-        if not slicer.util.getModule('OpenAnatomyExport'):
-            slicer.util.selectModule('OpenAnatomyExport')
-
-        slicer.app.processEvents()
-
-        export_model_to_gltf(outputFolder)
+    export_scene_to_obj(outputFolder)
 
     
 
