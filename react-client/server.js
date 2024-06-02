@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Serve static files from the React app's build directory
 app.use(express.static(path.join(__dirname, 'build')));
 
 app.get('/*', (req, res) => {
