@@ -6,11 +6,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-        '/api': {
-            target: 'http://localhost:3000',
-            changeOrigin: true,
-            secure: false
-        }
+      '/api': {
+        target: 'https://dicomviewer3d.onrender.com',
+        changeOrigin: true,
+        secure: false
+      }
     }
   },
 })
