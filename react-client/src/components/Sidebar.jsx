@@ -40,13 +40,16 @@ export default function TemporaryDrawer() {
         <Collapse in={subopen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             <ListItemButton sx={{ pl: 4 }}>
-              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Type 1" />
+              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="All" />
             </ListItemButton>
             <ListItemButton sx={{ pl: 4 }}>
-              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Type 2" />
+              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Skin" />
             </ListItemButton>
             <ListItemButton sx={{ pl: 4 }}>
-              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Type 3" />
+              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Bone" />
+            </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }}>
+              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Soft Tissue" />
             </ListItemButton>
           </List>
         </Collapse>
