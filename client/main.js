@@ -1,198 +1,349 @@
 import * as THREE from 'three';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 
-const loader = new GLTFLoader();
+let camera, scene, renderer, mesh, cssRenderer;
+const keyState = {};
+let isFormSubmitted = false;
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let popupElement = null;
+let lastIntersectionObject = null;
+init();
 
-const scene = new THREE.Scene();
-const nearClippingDistance = 0.01; // Adjust as needed
-const farClippingDistance = 1000; // Adjust as needed
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, nearClippingDistance, farClippingDistance);
-const renderer = new THREE.WebGLRenderer({
-    canvas: document.querySelector('#canvas')
-});
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
+function init() {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
 
-// Set initial camera position and rotation
-camera.position.set(0, 0, 0);
-camera.rotation.set(0, 0, 0);
+    // Camera setup
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
+    camera.position.set(0, 0, 50);
 
-// Lighting
-const directionalLight = new THREE.DirectionalLight(0xffffff); // Change light color to white
-directionalLight.position.set(500, 500, 500);
-scene.add(directionalLight);
+    // Scene setup
+    scene = new THREE.Scene();
 
-// Set ambient light to brighten up the scene
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Adjust intensity as needed
-scene.add(ambientLight);
+    // Directional light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1); // Adjust the position as needed
+    scene.add(directionalLight);
 
-// Set background color to light blue
-renderer.setClearColor(new THREE.Color(0xadd8e6)); // Light blue color
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Adjust intensity as needed
+    scene.add(ambientLight);
 
-// Controls
-const controls = new PointerLockControls(camera, document.body);
+    // Renderer setup
+    renderer = new THREE.WebGLRenderer({ antialias: true, pixelRatio: window.devicePixelRatio });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(new THREE.Color(0xadd8e6)); // Light blue color
+    container.appendChild(renderer.domElement);
 
-let mesh = null;
-//let x = 0;
-//let y = 0;
-//let z = 0;
-camera.position.set(0, 0, 50); // Example initial position (adjust as needed)
-//const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff]; // arry of colors
+    // CSS3DRenderer setup
+    cssRenderer = new CSS3DRenderer();
+    cssRenderer.setSize(window.innerWidth, window.innerHeight);
+    cssRenderer.domElement.style.position = 'absolute';
+    cssRenderer.domElement.style.top = '0';
+    container.appendChild(cssRenderer.domElement);
 
-let colorIndex = 0; // Track the index of the current color
-function loadCallback(gltf) {
-    if (mesh) {
-        scene.remove(mesh);
-    }
+    // Create a 3D object
+    const element = document.createElement('div');
+    element.style.width = '50px'; // Adjust the width of the square
+    element.style.height = '50px'; // Adjust the height of the square
+    element.style.background = 'red';
+    const cssObject = new CSS3DObject(element);
+    cssObject.position.set(0, 0, -100); // Adjust the position of the square along the z-axis
+    cssObject.visible = false;
+    scene.add(cssObject);
 
-    mesh = gltf.scene;
-    mesh.position.set(0, 0, 0);
-    mesh.rotation.x = -Math.PI / 2;
-    scene.add(mesh);
+    // PointerLockControls setup
+    const controls = new PointerLockControls(camera, document.body);
+    document.addEventListener('click', () => {
+        controls.lock();
+    });
+
+    // Event listeners for controls
+    document.addEventListener('keydown', (event) => {
+        keyState[event.code] = true;
+    });
+    document.addEventListener('keyup', (event) => {
+        keyState[event.code] = false;
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', onWindowResize);
+
+    // Handle file upload
+    const form = document.getElementById('upload');
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        if (isFormSubmitted) {
+            console.log('Form is already submitted.');
+            return;
+        }
+
+        console.log('Submitting form...');
+        isFormSubmitted = true;
+        const body = new FormData(form);
+
+        try {
+            const response = await fetch('/api/dicom', { method: "POST", body });
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Upload successful.');
+                console.log('Response:', result);
+                const modelID = result.modelId;
+                loadModel(modelID);
+            } else {
+                console.error('Upload failed:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error occurred during upload:', error);
+        } finally {
+            isFormSubmitted = true;
+        }
+    });
+
+    // Start the update loop
     animate();
 }
 
-function animate() {
-    try {
-        requestAnimationFrame(animate);
-        updateCameraPosition();
-        scaleModel();
-        renderer.render(scene, camera);
-    } catch (error) {
-        console.error("An error occurred:", error);
-        
+
+
+function checkIntersection() {
+    if (!mesh) return;
+    const cameraPosition = camera.position.clone();
+
+    let intersectedObject = null;
+    mesh.traverse((child) => {
+        if (child.isMesh) {
+            const boundingBox = child.geometry.boundingBox.clone();
+            boundingBox.applyMatrix4(child.matrixWorld);
+
+            if (boundingBox.containsPoint(cameraPosition)) {
+                intersectedObject = child;
+            }
+        }
+    });
+
+    if (intersectedObject !== lastIntersectionObject) {
+        if (intersectedObject) {
+            const info = intersectedObject.name || 'No additional information'; // Retrieve object information
+            console.log('Camera inside:', intersectedObject.name, info); // Print information
+            displayPopup(info); // Pass object information to the popup function
+        } else {
+            console.log('No intersection detected');
+            hidePopup(); // Hide popup if no intersections
+        }
+        lastIntersectionObject = intersectedObject;
     }
 }
 
-// Key bindings for first-person controls
-const keyState = {};
-document.addEventListener('keydown', (event) => {
-    keyState[event.code] = true;
-});
-document.addEventListener('keyup', (event) => {
-    keyState[event.code] = false;
-});
+// Define variables for popup handling
 
-const minMoveSpeed = 0.04; // Minimum movement speed
-const maxMoveSpeed = 0.05; // Maximum movement speed
-const minDistanceToModel = 0.001;
+
+// Function to display popup with information
+function displayPopup(info) {
+    hidePopup(); // Hide any existing popup
+
+    // Create a new popup HTML element
+    const popupDiv = document.createElement('div');
+    popupDiv.innerHTML = info; // Display information in the popup
+    popupDiv.style.position = 'absolute';
+    popupDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+    popupDiv.style.padding = '10px';
+    popupDiv.style.borderRadius = '5px';
+    popupDiv.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.3)';
+    
+    // Position the popup at the center of the screen
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 5;
+    popupDiv.style.left = `${centerX}px`;
+    popupDiv.style.top = `${centerY}px`;
+    
+    // Append the popup to the CSS3DRenderer DOM element
+    cssRenderer.domElement.appendChild(popupDiv);
+
+    // Update the global variable to reference the new popup element
+    popupElement = popupDiv;
+}
+
+// Function to hide the popup
+function hidePopup() {
+    // If there's a currently displayed popup, remove it from the DOM
+    if (popupElement) {
+        popupElement.remove();
+        popupElement = null; // Reset the global variable
+    }
+}
+
+async function loadModel(modelID) {
+    const mtlLoader = new MTLLoader();
+    mtlLoader.setPath(`/textures/${modelID}/`);
+    mtlLoader.load('scene.mtl', (materials) => {
+        materials.preload();
+
+        const objLoader = new OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.setPath(`/textures/${modelID}/`);
+        objLoader.load('scene.obj', (object) => {
+            console.log("Uploading mesh", object);
+            const loadedScene = object;
+            console.log("Loaded Scene:", loadedScene);
+            loadedScene.position.set(0, 0, 0);
+            loadedScene.rotation.x = -Math.PI / 2;
+            scene.add(loadedScene);
+            
+            mesh = loadedScene;
+            mesh.scale.set(100, 100, 100);
+            assignColorsToMeshes(mesh);
+            setHighestGeometryTransparent(mesh);
+
+            mesh.traverse((child) => {
+                if (child.isMesh) {
+                    console.log("Mesh child:", child); // Log each mesh child
+                    child.geometry.computeBoundingBox();
+                }
+            });
+            
+            console.log('Fetching segment names...');
+            fetch(`/textures/${modelID}/segment_names.txt`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch segment names');
+                    }
+                    return response.text();
+                })
+                .then(segmentNamesText => {
+                    console.log('Segment names fetched successfully:', segmentNamesText);
+                    const segmentNamesArray = segmentNamesText.trim().split('\n');
+                    console.log('Segment names array:', segmentNamesArray);
+                    let index = 0;
+                    mesh.traverse((child) => {
+                        console.log('Checking mesh child:', child);
+                        if (child.isMesh) {
+                            console.log('Mesh child is a Mesh:', child);
+                            const segmentName = segmentNamesArray[index];
+                            child.name = segmentName;
+                            index++;
+                            console.log(`Assigned name '${segmentName}' to mesh child`);
+                        } else {
+                            console.log('Mesh child is not a Mesh:', child);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching segment names:', error);
+                });
+
+            // Log model scale and position
+            console.log("Model scale:", mesh.scale.x, mesh.scale.y, mesh.scale.z);
+            console.log("Model position:", mesh.position.x, mesh.position.y, mesh.position.z);
+
+            animate();
+        }, undefined, (error) => {
+            console.error('An error occurred while loading the model:', error);
+        });
+    });
+}
+
+function assignColorsToMeshes(object) {
+    object.traverse((child) => {
+        if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(Math.random() * 0xffffff),
+            });
+        }
+    });
+}
+
+function setHighestGeometryTransparent(object) {
+    let highestGeometryMesh = null;
+    let maxYBound = -Infinity;
+
+    object.traverse((child) => {
+        if (child.isMesh) {
+            const boundingBox = new THREE.Box3().setFromObject(child);
+            const childMaxYBound = boundingBox.max.y;
+            
+            if (childMaxYBound > maxYBound) {
+                maxYBound = childMaxYBound;
+                highestGeometryMesh = child;
+            }
+        }
+    });
+
+    if (highestGeometryMesh) {
+        highestGeometryMesh.material.transparent = true;
+        highestGeometryMesh.material.opacity = 0.3;
+    }
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    updateCameraPosition();
+    scaleModel();
+    
+    // Update raycaster
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    
+    if (intersects.length > 0) {
+        const intersectedObject = intersects[0].object;
+        const info = intersectedObject.name || 'No additional information';
+        displayPopup(info);
+    } else {
+        hidePopup();
+    }
+    
+    renderer.render(scene, camera);
+    cssRenderer.render(scene, camera);
+    checkIntersection();
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
 function updateCameraPosition() {
-
+    if (!mesh) return;
+    
+    // Increase moveSpeed for faster movement
+    const moveSpeed = 0.1; // Adjust this value to increase movement speed
+    
     const distanceToModel = camera.position.distanceTo(mesh.position);
-    if (distanceToModel < minDistanceToModel) {
+    if (distanceToModel < 0.001) {
         const moveDirection = new THREE.Vector3();
         camera.getWorldDirection(moveDirection);
-        camera.position.add(moveDirection.multiplyScalar(minDistanceToModel - distanceToModel));
+        camera.position.add(moveDirection.multiplyScalar(0.001 - distanceToModel));
     }
-    // Create a direction vector from the camera's rotation
     const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
-
-    // Normalize the direction vector to ensure consistent movement speed
-    direction.normalize();
-
-    // Calculate the right direction relative to the camera's rotation
-    const right = new THREE.Vector3();
-    right.crossVectors(direction, camera.up).normalize();
-
-    // Calculate the movement speed based on the distance
-    const moveSpeed = THREE.MathUtils.clamp(1 / camera.position.distanceTo(mesh.position), minMoveSpeed, maxMoveSpeed);
-
-    // Move camera based on key input along global axes
+    camera.getWorldDirection(direction).normalize();
+    const right = new THREE.Vector3().crossVectors(direction, camera.up).normalize();
     let moveDirection = new THREE.Vector3(0, 0, 0);
-
-    if (keyState['KeyW']) {
-        moveDirection.add(direction);
-    }
-    if (keyState['KeyS']) {
-        moveDirection.sub(direction);
-    }
-    if (keyState['KeyA']) {
-        moveDirection.sub(right);
-    }
-    if (keyState['KeyD']) {
-        moveDirection.add(right);
-    }
-
-    // Apply movement direction
+    if (keyState['KeyW']) moveDirection.add(direction);
+    if (keyState['KeyS']) moveDirection.sub(direction);
+    if (keyState['KeyA']) moveDirection.sub(right);
+    if (keyState['KeyD']) moveDirection.add(right);
+    
+    // Multiply moveDirection by moveSpeed directly
     camera.position.add(moveDirection.multiplyScalar(moveSpeed));
-
-    // Move camera up and down
-    if (keyState['Space']) { 
-        camera.position.y += moveSpeed;
-    }
-    if (keyState['ShiftLeft'] || keyState['ShiftRight']) { 
-        camera.position.y -= moveSpeed;
-    }
-
+    
+    // Adjust the speed for vertical movement
+    if (keyState['Space']) camera.position.y += moveSpeed * 2; // Increase vertical speed
+    if (keyState['ShiftLeft'] || keyState['ShiftRight']) camera.position.y -= moveSpeed * 2; // Increase vertical speed
 }
 
-document.addEventListener('click', () => {
-    controls.lock();
-});
-
-let isFormSubmitted = false; 
-
-const form = document.getElementById('upload');
-form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-
-    // Check if form is already submitted
-    if (isFormSubmitted) {
-        console.log('Form is already submitted.');
-        return; 
-    }
-
-    console.log('Submitting form...');
-    isFormSubmitted = true; 
-    const body = new FormData(form);
-
-    try {
-        const response = await fetch('/api/dicom', { method: "POST", body });
-        if (response.ok) {
-            const result = await response.json();
-            console.log('Upload successful.');
-            console.log('Response:', result);
-            const modelID = result.modelId;
-            loader.load(`/textures/${modelID}/model.gltf`, loadCallback);
-        } else {
-            console.error('Upload failed:', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error occurred during upload:', error);
-    } finally {
-        isFormSubmitted = true;
-    }
-});
-
-
-
-
-
-// Function to scale the model based on camera distance
 function scaleModel() {
     if (!mesh) return;
-
-    // Calculate the distance between the camera and the model
     const distance = camera.position.distanceTo(mesh.position);
-
-    // Calculate the scaling factor based on the inverse of the distance
-    const scaleFactor = 3 / distance; // Adjust the scaling factor as needed
-
-    // Set a minimum scale to prevent the model from disappearing
-    const minScale = 0.1;
-    const finalScale = Math.max(minScale, scaleFactor);
-
-    // Apply the scaling factor to the model
+    const scaleFactor = 3 / distance;
+    const finalScale = Math.max(0.1, scaleFactor);
     mesh.scale.set(finalScale, finalScale, finalScale);
-
-    // Disable shadows for the model
     mesh.castShadow = false;
     mesh.receiveShadow = false;
 }
-
-// Start the update loop
-animate();
