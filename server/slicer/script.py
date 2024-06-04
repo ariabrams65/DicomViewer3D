@@ -6,6 +6,7 @@ import slicer
 import shutil
 import re
 
+
 def load_and_filter_rtstruct(db, seriesUID, unwantedKeywords, outputFolder):
     loadedNodeIDs = DICOMUtils.loadSeriesByUID([seriesUID])
     for nodeID in loadedNodeIDs:
@@ -99,6 +100,7 @@ def export_scene_to_obj(outputFolder):
     exporter.SetInput(renderWindow)
     exporter.SetFilePrefix(os.path.join(outputFolder, 'scene'))
     exporter.Write()
+    
 
 def main(inputFolder, outputFolder):
     dicomDataDir = inputFolder

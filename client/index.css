@@ -1,0 +1,13 @@
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none; /* This ensures that the canvas doesn't capture mouse events */
+    z-index: -1; /* Move the canvas behind other elements */
+}
+
+/* Adjust the z-index of other elements as needed */
+form, button {
+    position: relative;
+    z-index: 1; /* Ensure that the form and button are above the canvas */
+}

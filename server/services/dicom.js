@@ -4,6 +4,8 @@ const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const AdmZip = require("adm-zip");
 const config = require("../../config");
+const obj2gltf = require("obj2gltf");
+
 
 async function generateModels(inputFolder) {
 	//create the folder where the models will be stored
@@ -15,7 +17,17 @@ async function generateModels(inputFolder) {
 	const result = child_process.execSync(command);
 	console.log(result.toString());
 
-	return modelId;
+	// Check if OBJ files are generated successfully
+    const objFilePath = path.join(outputFolder, 'scene.obj');
+    if (!fs.existsSync(objFilePath)) {
+        console.error('Failed to generate OBJ files.');
+        return null;
+    }
+
+    // Convert OBJ to GLTF
+    await convertObjToGltf(objFilePath, outputFolder);
+
+    return modelId;
 }
 
 function createOutputFolder(modelId) {
@@ -29,6 +41,25 @@ function getScriptCommand(inputFolder, outputFolder) {
 	const scriptPath = `${path.join(__dirname, "../slicer/script.py")}`;
 	const scriptArgs = `${inputFolder} ${outputFolder}`;
 	return `"${process.env.SLICER_EXECUTABLE}" --python-script ${scriptPath} ${scriptArgs}`;
+}
+
+async function convertObjToGltf(objFilePath, outputFolder) {
+    try {
+        // Define the output file path for the GLTF file
+        const gltfFilePath = path.join(outputFolder, 'scene.gltf');
+
+        // Convert OBJ to GLTF
+        const options = {}; // You can pass options here if needed
+        const gltf = await obj2gltf(objFilePath, options);
+
+        // Write the GLTF data to the output file
+        const data = Buffer.from(JSON.stringify(gltf));
+        fs.writeFileSync(gltfFilePath, data);
+
+        console.log('Conversion successful:', gltfFilePath);
+    } catch (error) {
+        console.error('Error occurred during conversion:', error);
+    }
 }
 
 function isValid(dicomFolder) {
@@ -56,4 +87,4 @@ function unzip(zipFile) {
 	return targetFolder;
 }
 
-module.exports = { generateModels, isValid, unzip, isZip, filterDicom };
+module.exports = { generateModels, isValid, unzip, isZip, filterDicom, convertObjToGltf };
