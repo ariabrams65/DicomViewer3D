@@ -12,6 +12,7 @@ const mouse = new THREE.Vector2();
 let popupElement = null;
 let lastIntersectionObject = null;
 const modelMeshes = [];
+const simplifiedMeshes = [];
 init();
 
 function init() {
@@ -202,6 +203,8 @@ async function loadModel(modelID) {
             if (child.isMesh) {
                 console.log("Mesh child:", child); // Log each mesh child
                 child.geometry.computeBoundingBox();
+                const simplifiedMesh = new THREE.Mesh(child.geometry.clone(), child.material.clone());
+                simplifiedMeshes.push(simplifiedMesh);
             }
         });
         
@@ -288,15 +291,17 @@ function animate() {
     scaleModel();
     
     // Update raycaster
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(modelMeshes, true);
+    if (performance.now() % 20 === 0) {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(modelMeshes, true);
     
-    if (intersects.length > 0) {
-        const intersectedObject = intersects[0].object;
-        const info = intersectedObject.name || 'No additional information';
-        displayPopup(info);
-    } else {
-        hidePopup();
+        if (intersects.length > 0) {
+            const intersectedObject = intersects[0].object;
+            const info = intersectedObject.name || 'No additional information';
+            displayPopup(info);
+        } else {
+            hidePopup();
+        }
     }
     
     renderer.render(scene, camera);
@@ -314,7 +319,7 @@ function updateCameraPosition() {
     if (!mesh) return;
     
     // Increase moveSpeed for faster movement
-    const moveSpeed = 0.3; // Adjust this value to increase movement speed
+    const moveSpeed = 0.1; // Adjust this value to increase movement speed
     
     const distanceToModel = camera.position.distanceTo(mesh.position);
     if (distanceToModel < 0.001) {

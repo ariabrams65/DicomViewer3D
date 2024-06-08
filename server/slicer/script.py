@@ -5,6 +5,8 @@ import vtk
 import slicer
 import shutil
 import re
+import numpy as np
+from scipy.ndimage import gaussian_filter
 
 
 def load_and_filter_rtstruct(db, seriesUID, unwantedKeywords, outputFolder):
@@ -57,10 +59,7 @@ def load_and_filter_rtstruct(db, seriesUID, unwantedKeywords, outputFolder):
                     with open(segment_names_path, 'a') as f:
                         f.write(segmentName + '\n')
 
-                    #if segmentation.GetSegment(segmentID).GetRepresentation() != slicer.vtkSegmentationConverter.GetSegmentationBinaryLabelmapRepresentationName():
-                        #segmentation.CreateRepresentation(slicer.vtkSegmentationConverter.GetSegmentationBinaryLabelmapRepresentationName(), segmentID)
-                    # Apply Gaussian smoothing to the segment
-                    '''print(f"Applying Gaussian smoothing to segment: {segmentName}")
+                    print(f"Applying Gaussian smoothing to segment: {segmentName}")
                     segmentEditorWidget = slicer.qMRMLSegmentEditorWidget()
                     segmentEditorWidget.setMRMLScene(slicer.mrmlScene)
                     segmentEditorNode = slicer.vtkMRMLSegmentEditorNode()
@@ -73,7 +72,7 @@ def load_and_filter_rtstruct(db, seriesUID, unwantedKeywords, outputFolder):
                     effect = segmentEditorWidget.activeEffect()
                     effect.setParameter("SmoothingMethod", "Gaussian")
                     effect.setParameter("GaussianStandardDeviationMm", 3.0)  # Adjust the value as needed
-                    effect.self().onApply()'''
+                    effect.self().onApply()
     
     return loadedNodeIDs
 
