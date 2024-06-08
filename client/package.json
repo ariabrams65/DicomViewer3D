@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "obj2gltf": "^3.1.6",
     "three": "^0.163.0"
   },
   "devDependencies": {
