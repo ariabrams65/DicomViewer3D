@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+
 
 let camera, scene, renderer, mesh, cssRenderer;
 const keyState = {};
@@ -11,6 +11,8 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let popupElement = null;
 let lastIntersectionObject = null;
+const modelMeshes = [];
+const simplifiedMeshes = [];
 init();
 
 function init() {
@@ -179,73 +181,71 @@ function hidePopup() {
     }
 }
 
+
+
 async function loadModel(modelID) {
-    const mtlLoader = new MTLLoader();
-    mtlLoader.setPath(`/textures/${modelID}/`);
-    mtlLoader.load('scene.mtl', (materials) => {
-        materials.preload();
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.setPath(`/textures/${modelID}/`);
+    gltfLoader.load('scene.gltf', (gltf) => {
+        console.log("Uploading mesh", gltf.scene);
+        const loadedScene = gltf.scene;
+        console.log("Loaded Scene:", loadedScene);
+        loadedScene.position.set(0, 0, 0);
+        loadedScene.rotation.x = -Math.PI / 2;
+        scene.add(loadedScene);
+        
+        mesh = loadedScene;
+        mesh.scale.set(100, 100, 100);
+        assignColorsToMeshes(mesh);
+        setHighestGeometryTransparent(mesh);
 
-        const objLoader = new OBJLoader();
-        objLoader.setMaterials(materials);
-        objLoader.setPath(`/textures/${modelID}/`);
-        objLoader.load('scene.obj', (object) => {
-            console.log("Uploading mesh", object);
-            const loadedScene = object;
-            console.log("Loaded Scene:", loadedScene);
-            loadedScene.position.set(0, 0, 0);
-            loadedScene.rotation.x = -Math.PI / 2;
-            scene.add(loadedScene);
-            
-            mesh = loadedScene;
-            mesh.scale.set(100, 100, 100);
-            assignColorsToMeshes(mesh);
-            setHighestGeometryTransparent(mesh);
-
-            mesh.traverse((child) => {
-                if (child.isMesh) {
-                    console.log("Mesh child:", child); // Log each mesh child
-                    child.geometry.computeBoundingBox();
-                }
-            });
-            
-            console.log('Fetching segment names...');
-            fetch(`/textures/${modelID}/segment_names.txt`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch segment names');
-                    }
-                    return response.text();
-                })
-                .then(segmentNamesText => {
-                    console.log('Segment names fetched successfully:', segmentNamesText);
-                    const segmentNamesArray = segmentNamesText.trim().split('\n');
-                    console.log('Segment names array:', segmentNamesArray);
-                    let index = 0;
-                    mesh.traverse((child) => {
-                        console.log('Checking mesh child:', child);
-                        if (child.isMesh) {
-                            console.log('Mesh child is a Mesh:', child);
-                            const segmentName = segmentNamesArray[index];
-                            child.name = segmentName;
-                            index++;
-                            console.log(`Assigned name '${segmentName}' to mesh child`);
-                        } else {
-                            console.log('Mesh child is not a Mesh:', child);
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching segment names:', error);
-                });
-
-            // Log model scale and position
-            console.log("Model scale:", mesh.scale.x, mesh.scale.y, mesh.scale.z);
-            console.log("Model position:", mesh.position.x, mesh.position.y, mesh.position.z);
-
-            animate();
-        }, undefined, (error) => {
-            console.error('An error occurred while loading the model:', error);
+        mesh.traverse((child) => {
+            if (child.isMesh) {
+                console.log("Mesh child:", child); // Log each mesh child
+                child.geometry.computeBoundingBox();
+                const simplifiedMesh = new THREE.Mesh(child.geometry.clone(), child.material.clone());
+                simplifiedMeshes.push(simplifiedMesh);
+            }
         });
+        
+        console.log('Fetching segment names...');
+        fetch(`/textures/${modelID}/segment_names.txt`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch segment names');
+                }
+                return response.text();
+            })
+            .then(segmentNamesText => {
+                console.log('Segment names fetched successfully:', segmentNamesText);
+                const segmentNamesArray = segmentNamesText.trim().split('\n');
+                console.log('Segment names array:', segmentNamesArray);
+                let index = 0;
+                mesh.traverse((child) => {
+                    console.log('Checking mesh child:', child);
+                    if (child.isMesh) {
+                        console.log('Mesh child is a Mesh:', child);
+                        const segmentName = segmentNamesArray[index];
+                        child.name = segmentName;
+                        index++;
+                        console.log(`Assigned name '${segmentName}' to mesh child`);
+                        modelMeshes.push(child);
+                    } else {
+                        console.log('Mesh child is not a Mesh:', child);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching segment names:', error);
+            });
+
+        // Log model scale and position
+        console.log("Model scale:", mesh.scale.x, mesh.scale.y, mesh.scale.z);
+        console.log("Model position:", mesh.position.x, mesh.position.y, mesh.position.z);
+
+        animate();
+    }, undefined, (error) => {
+        console.error('An error occurred while loading the model:', error);
     });
 }
 
@@ -254,6 +254,10 @@ function assignColorsToMeshes(object) {
         if (child.isMesh) {
             child.material = new THREE.MeshStandardMaterial({
                 color: new THREE.Color(Math.random() * 0xffffff),
+                emissive: false,
+                emissiveIntensity: 0,
+                envMapIntensity: 0,
+                flatShading: true,
             });
         }
     });
@@ -287,15 +291,17 @@ function animate() {
     scaleModel();
     
     // Update raycaster
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(scene.children, true);
+    if (performance.now() % 20 === 0) {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(modelMeshes, true);
     
-    if (intersects.length > 0) {
-        const intersectedObject = intersects[0].object;
-        const info = intersectedObject.name || 'No additional information';
-        displayPopup(info);
-    } else {
-        hidePopup();
+        if (intersects.length > 0) {
+            const intersectedObject = intersects[0].object;
+            const info = intersectedObject.name || 'No additional information';
+            displayPopup(info);
+        } else {
+            hidePopup();
+        }
     }
     
     renderer.render(scene, camera);
