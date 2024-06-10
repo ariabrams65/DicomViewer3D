@@ -47,9 +47,9 @@ function Toolbar({ setIDName, setUploadSuccess }) { // Receive props
             <div className='side'>
                 <TemporaryDrawer />
             </div>
-            <button className='left'>DICOM Viewer</button>
-            <h1 className='toolbar'>VIEW TYPE</h1>
-            <form ref={formRef} onSubmit={handleSubmit}
+            {/* <button className='left'>DICOM Viewer</button> */}
+            <h1 className='toolbar'>DICOM Viewer</h1>
+            <form className='right' ref={formRef} onSubmit={handleSubmit}
                 id="upload" action="/api/upload" method="post" encType="multipart/form-data">
                 <input type="file" name="dicom" />
                 <button type="submit">Upload</button>

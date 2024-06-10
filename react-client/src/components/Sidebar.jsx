@@ -44,7 +44,7 @@ export default function TemporaryDrawer() {
   const DrawerList = (
     <Box sx={{ width: 600}} role="presentation" >
       <List>
-        <ListItemButton onClick={handleClick} style={{minHeight: '150px', backgroundColor:"lightblue"}}>
+        {/* <ListItemButton onClick={handleClick} style={{minHeight: '150px', backgroundColor:"lightblue"}}>
           <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary="View Types" />
           {subopen ? <ExpandLess /> : <ExpandMore />} 
         </ListItemButton>
@@ -68,7 +68,7 @@ export default function TemporaryDrawer() {
             <ListItemButton style={{minHeight: '150px', backgroundColor:'lightblue'}}>
               <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary={"Settings"} />
             </ListItemButton>
-          </ListItem>
+          </ListItem> */}
           <ListItem key={"Help"} disablePadding>
             <ListItemButton style={{minHeight: '150px', backgroundColor:'lightblue'}} onClick={helpUp}>
               <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary={"Help"} />
