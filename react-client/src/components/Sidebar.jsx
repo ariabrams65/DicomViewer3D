@@ -44,31 +44,7 @@ export default function TemporaryDrawer() {
   const DrawerList = (
     <Box sx={{ width: 600}} role="presentation" >
       <List>
-        <ListItemButton onClick={handleClick} style={{minHeight: '150px', backgroundColor:"lightblue"}}>
-          <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary="View Types" />
-          {subopen ? <ExpandLess /> : <ExpandMore />} 
-        </ListItemButton>
-        <Collapse in={subopen} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            <ListItemButton sx={{ pl: 4 }}>
-              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="All" />
-            </ListItemButton>
-            <ListItemButton sx={{ pl: 4 }}>
-              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Skin" />
-            </ListItemButton>
-            <ListItemButton sx={{ pl: 4 }}>
-              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Bone" />
-            </ListItemButton>
-            <ListItemButton sx={{ pl: 4 }}>
-              <ListItemText className="centered" primaryTypographyProps={{fontSize: '25px'}} primary="Soft Tissue" />
-            </ListItemButton>
-          </List>
-        </Collapse>
-          <ListItem key={"Settings"} disablePadding>
-            <ListItemButton style={{minHeight: '150px', backgroundColor:'lightblue'}}>
-              <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary={"Settings"} />
-            </ListItemButton>
-          </ListItem>
+        {}
           <ListItem key={"Help"} disablePadding>
             <ListItemButton style={{minHeight: '150px', backgroundColor:'lightblue'}} onClick={helpUp}>
               <ListItemText className="centered" primaryTypographyProps={{fontSize: '35px'}} primary={"Help"} />

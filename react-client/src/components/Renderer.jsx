@@ -19,7 +19,7 @@ function Renderer({ modelID }) {
   const mouse = new THREE.Vector2();
   const css3DRendererRef = useRef();
 
-  const moveSpeed = 0.15;
+  const moveSpeed = 0.3;
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -56,6 +56,9 @@ function Renderer({ modelID }) {
   }, []);
 
   function handleModelLoad(loadedModel) {
+    // Set the model's initial position and rotation
+    loadedModel.position.set(0, 0, 0); // Move the model closer to the camera
+    //loadedModel.rotation.set(-Math.PI / 2, -Math.PI, 0); // Correct rotation
     setModel(loadedModel);
   }
 
